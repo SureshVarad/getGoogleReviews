@@ -4,13 +4,16 @@ Program to invoke Google Places API and return results
 @author: Suresh
 """
 from __future__ import absolute_import
-
 from decimal import Decimal
+from collections import defaultdict
+from google.cloud import language
+from google.cloud.language import enums
+from google.cloud.language import types as google_types
 import warnings
 import os
 
-#from googleplaces import GooglePlaces, types, lang
-from . import googleplaces, types, lang
+from googleplaces import GooglePlaces, types, lang
+#from . import googleplaces, types, lang
 
 __all__ = ['GooglePlaces', 'GooglePlacesError', 'GooglePlacesAttributeError', 'geocode_location']
 
@@ -21,6 +24,7 @@ else:
 
 geoLocation = ""
 
+# [START def_getInput]
 def getInput():
 	""" Gets City/State or Zip option from user"""
 
@@ -30,7 +34,9 @@ def getInput():
 	print "\n2. Zip"
 	inputOption = raw_input('\nYour Choice (1/2): ')
 	validateInput(inputOption)
+# [END def_getInput]
 
+# [START def_validateInput]
 def validateInput(inputOption):
 	""" Fetches & Validates the passed input and gets City/Zip details"""
 	global geoLocation
@@ -49,44 +55,83 @@ def validateInput(inputOption):
 		 #TODO: Validate Zip code format
 	         geoLocation = zipCode
 	print "\n\nGeoLocation from User Input : " + geoLocation
+# [END def_validateInput]
 
-getInput()
-print "\n\nGeo Location: " + geoLocation
+# [START Of def_print_results]
+def print_results(place, detail_res, id):
+    print "%s @ %s, Google Place ID: %s" % (place.name, address, id)
+    print "Ratings : %s <--> %s \n" % (str(ratings), str(reviewRatings))
+    print "Positive Reviews : %s \n" % str(positiveReviews)
+    print "Negative Reviews : %s \n" % str(negativeReviews)
+    #print "Phone # : %s " % str(place.local_phone_number)
+    #print "Website : %s " % str(place.website)
+    #print "MapsURL : %s \n\n" % str(place.url)
+    print('Detailed Results {}'.format(detail_res[id]))
+# [END of def_print_results]
+
+# [START MAIN BLOCK]
+if __name__ == '__main__':
+	getInput()
+	print "\n\nGeo Location: " + geoLocation
 
 
-YOUR_API_KEY = 'AIzaSyAG2gC75WBWAtPsJ9dFtzum9yts0xlZ3Qo'
+	YOUR_API_KEY = 'AIzaSyAG2gC75WBWAtPsJ9dFtzum9yts0xlZ3Qo'
 
-#google_places = GooglePlaces(YOUR_API_KEY)
-google_places = googleplaces.GooglePlaces(YOUR_API_KEY)
+	google_places = GooglePlaces(YOUR_API_KEY)
+	#google_places = googleplaces.GooglePlaces(YOUR_API_KEY)
 
-query_result = google_places.nearby_search( location=geoLocation, keyword='7 Eleven', radius=20000, types=[types.TYPE_GAS_STATION])
+	#Get All 7 Eleven Stores of type "Gas Station" in the radius of 25miles. Google Returns only 20 top results in one page.
+	query_result = google_places.nearby_search( location=geoLocation, keyword='7 Eleven', radius=25000, types=[types.TYPE_GAS_STATION])
 
-if query_result.has_attributions:
-    print query_result.html_attributions
+	if query_result.has_attributions:
+	    print query_result.html_attributions
 
-count = 0
-for place in query_result.places:
-    # The following method has to make a further API call, before getting reviews.
-    place.get_details()
-    address = place.details.get('formatted_address')
-    ratings = place.rating
-    reviews = place.details.get('reviews')
-    #reviews = place.details.get('reviews').get('text')
-    reviewText = []  
-    for i, _ in enumerate(reviews):
-	stringBuffer = reviews[i]['text']
-	stringBuffer = stringBuffer.encode('utf-8')
-	reviewText.append(stringBuffer)
+	detail_res = defaultdict(dict)
+	count = 0
+	#Initialize Google Cloud Sentiment Analysis
+	client = language.LanguageServiceClient()
 
-    #detail_res[id]['ratings'] = ratings
+	for place in query_result.places:
+	    # The following method has to make a further API call, before getting reviews.
+	    place.get_details()
+	    id = place.place_id
+	    address = place.details.get('formatted_address')
+	    ratings = place.rating
+	    reviews = place.details.get('reviews')
+	    #reviews = place.details.get('reviews').get('text')
+	    reviewText = []  
+	    reviewRatings = []
+	    positiveReviews = []
+	    negativeReviews = []
+	    #'''
+	    for i, _ in enumerate(reviews):
+		reviewTextBuffer = reviews[i]['text']
+		rate = reviews[i]['rating']
+		reviewTextBuffer = reviewTextBuffer.encode('utf-8')
+		reviewText.append(reviewTextBuffer)
+		reviewRatings.append(rate)
+		
+		#Get Google Sentiment Analysis for each review
+		document = google_types.Document(content=reviewTextBuffer, type=enums.Document.Type.PLAIN_TEXT)
+		annotations = client.analyze_sentiment(document=document)
+		score = annotations.document_sentiment.score
+		magnitude = annotations.document_sentiment.magnitude
+		# If score is above 0.3 it's a positive review, we can display this to customers
+		# We are going to skip over the mixed reviews for now.
+		# but can easily add an else condition, to capture them if required.
+		if score > 0.3:
+			positiveReviews.append(reviewTextBuffer)	
+		elif score < -0.3:
+			negativeReviews.append(reviewTextBuffer)	
+	    #'''
+	    detail_res[id]['overallRatings'] = ratings
+	    detail_res[id]['reviewRatings'] = reviewRatings
+	    detail_res[id]['AllReviewText'] = reviewText
+	    detail_res[id]['positiveReviews'] = positiveReviews
+	    detail_res[id]['negativeReviews'] = negativeReviews
+	    print_results(place, detail_res, id)
+	    count =  count + 1
+	    pass
+	print "Total Count : %s " % count
 
-    print "%s @ %s, Google Place ID: %s" % (place.name, address, place.place_id)
-    print "Ratings : %s " % str(ratings)
-    print "Reviews : %s " % str(reviewText)
-    print "Phone # : %s " % str(place.local_phone_number)
-    print "Website : %s " % str(place.website)
-    print "MapsURL : %s \n\n" % str(place.url)
-    #print place.international_phone_number
-    count =  count + 1
-    pass
-print "Total Count : %s " % count
+#[ END OF MAIN BLOCK AND PROGRRAM]

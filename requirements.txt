@@ -1,4 +1,4 @@
-pip install six
-pip install googlemaps
-pip install python-google-places
-pip install --upgrade google-cloud-language
+six
+googlemaps
+python-google-places
+google-cloud-language==1.0.1
