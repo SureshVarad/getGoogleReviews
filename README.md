@@ -1,11 +1,9 @@
 # getGoogleReviews
-#------------------
 #This application README package is tuned for Linux, 
 #Please use Git-Bash or similar tool on windows, to circumvent this.
 
 
 ### PRE-REQUISITES
-#-----------------
 #Make sure Python 2.7 or greater is installed along with Python Package installer pip.
 #create a new virtual environment, if you wish so (Optional)
 #Start using the virtual environment, so your installations won't affect global python
@@ -25,7 +23,10 @@ export GOOGLE_APPLICATION_CREDENTIALS="~/getGoogleReviews/<Google_Application_Cr
 #In Windows set the environment variable instead
 set GOOGLE_APPLICATION_CREDENTIALS="<CompletePath>\getGoogleReviews\<Google_Application_Credential>.json"
 
+#Update the YOUR_API_KEY in query.py file, fetch the Google Places API key and update it.
+# In Linux/GitBash run the following command to do that automatically.
+sed -i 's/YOUR_API_KEY = ""/YOUR_API_KEY = "<your_actual_api_key_here>"/g' query.py
+
 ### RUN THE CODE
-#---------------
 #To Run the program use below command, before the root directory.
 python -m getGoogleReviews.query
