@@ -14,7 +14,7 @@ source env/bin/activate
 ```
 #Once finished, use 'deactivate' to exit from virtual environment
 
-#If you do not have pip installed, but only python installed, follow below steps.
+#If you do not have pip installed, but only python installed, follow below steps, else skip to next block.
 ```
 wget https://bootstrap.pypa.io/get-pip.py
 python get-pip.py --prefix=/usr/local/
@@ -22,7 +22,7 @@ python get-pip.py --prefix=/usr/local/
 
 #Once pip is installed, run following to installed the required packages.
 ```
-(env)$ pip install -r requirements.txt
+pip install -r getGoogleReviews/requirements.txt
 ```
 ### Export GOOGLE_APPLICATION_CREDENTIALS
 #In Linux/Mac export the following
@@ -38,7 +38,7 @@ set GOOGLE_APPLICATION_CREDENTIALS="<CompletePath>\getGoogleReviews\<Google_Appl
 #create the Google API key and provide it permissions to use GeoCoding, Places & Cloud Natural Language API's.
 #In Linux/GitBash run the following command to do that automatically.
 ```
-sed -i 's/YOUR_API_KEY = ""/YOUR_API_KEY = "<your_actual_api_key_here>"/g' query.py
+sed -i 's/YOUR_API_KEY = ""/YOUR_API_KEY = "<your_actual_api_key_here>"/g' getGoogleReviews/query.py
 ```
 
 ### RUN THE CODE
