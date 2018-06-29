@@ -48,8 +48,7 @@ python -m getGoogleReviews.query
 ```
 
 ### Unit Tests
-# Due to time conmtraint, was just able to add 2 unit tests
-# more to come, when time permits, TO execute them follow below steps
+#Due to time constraints, was just able to add 2 unit tests more to come, when time permits, TO execute them follow below steps
 ```
 cd getGoogleReviews
 python -m unittest query_test
