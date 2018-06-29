@@ -27,7 +27,7 @@ python get-pip.py --prefix=/usr/local/
 ### Export GOOGLE_APPLICATION_CREDENTIALS
 #In Linux/Mac export the following
 ```
-export GOOGLE_APPLICATION_CREDENTIALS="~/getGoogleReviews/<Google_Application_Credential>.json"
+export GOOGLE_APPLICATION_CREDENTIALS="<CompletePath>/getGoogleReviews/<Google_Application_Credential>.json"
 ```
 #In Windows set the environment variable instead
 ```
