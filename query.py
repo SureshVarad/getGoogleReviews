@@ -1,5 +1,6 @@
 """
-Program to invoke Google Places API and return results
+Program to invoke Google Places API and return results and sort review based 
+on review sentiments from Google's Cloud Natural Language API
 
 @author: Suresh
 """
