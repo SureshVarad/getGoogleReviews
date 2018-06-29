@@ -23,8 +23,9 @@ export GOOGLE_APPLICATION_CREDENTIALS="~/getGoogleReviews/<Google_Application_Cr
 #In Windows set the environment variable instead
 set GOOGLE_APPLICATION_CREDENTIALS="<CompletePath>\getGoogleReviews\<Google_Application_Credential>.json"
 
-#Update the YOUR_API_KEY in query.py file, fetch the Google Places API key and update it.
-# In Linux/GitBash run the following command to do that automatically.
+# Update the YOUR_API_KEY in query.py file
+#create the Google API key and provide it permissions to use GeoCoding, Places & Cloud Natural Language API's.
+#In Linux/GitBash run the following command to do that automatically.
 sed -i 's/YOUR_API_KEY = ""/YOUR_API_KEY = "<your_actual_api_key_here>"/g' query.py
 
 ### RUN THE CODE

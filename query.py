@@ -19,19 +19,30 @@ from googleplaces import GooglePlaces, types, lang
 
 __all__ = ['GooglePlaces', 'GooglePlacesError', 'GooglePlacesAttributeError', 'geocode_location']
 
-#Set the Logs for debugging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-# create a file handler
-fileHandler = logging.FileHandler('googleReviews.log')
-fileHandler.setLevel(logging.INFO)
-# create a logging format
-formatter = logging.Formatter('%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] -> %(message)s')
-fileHandler.setFormatter(formatter)
-# add the handlers to the logger
-logger.addHandler(fileHandler)
-
 geoLocation = "" 
+log_dir = "./"
+file_name = "googleReviews.log"
+
+# [ START def_initialize_logger]
+def initialize_logger(output_dir, file_name):
+    	logger = logging.getLogger()
+	logger.setLevel(logging.DEBUG)
+
+	# create console handler and set level to info
+	handler = logging.StreamHandler()
+	handler.setLevel(logging.ERROR)
+	formatter = logging.Formatter("%(levelname)s - %(message)s")
+	handler.setFormatter(formatter)
+	logger.addHandler(handler)
+
+	# create debug file handler and set level to debug
+	handler = logging.FileHandler(os.path.join(output_dir, file_name),"w")
+	handler.setLevel(logging.DEBUG)
+	# create a logging format
+	formatter = logging.Formatter('%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] -> %(message)s')
+	handler.setFormatter(formatter)
+	logger.addHandler(handler)
+# [END of def_initialize_logger]
 
 # [START def_getInput]
 def getInput():
@@ -82,16 +93,16 @@ def print_results(place, detail_res, id):
     #print "Website : %s " % str(place.website)
     #print "MapsURL : %s \n\n" % str(place.url)
     #print('Detailed Results {}'.format(detail_res[id]))
-    logger.info('Detailed Results {}'.format(detail_res[id]))
+    logging.debug('Detailed Results {}'.format(detail_res[id]))
 # [END of def_print_results]
 
 # [START MAIN BLOCK]
 if __name__ == '__main__':
+	initialize_logger(log_dir, file_name)
 	getInput()
 	print "\n\nGeo Location: " + geoLocation
 
-
-	YOUR_API_KEY = ""
+	YOUR_API_KEY = "AIzaSyAG2gC75WBWAtPsJ9dFtzum9yts0xlZ3Qo"
 
 	google_places = GooglePlaces(YOUR_API_KEY)
 
@@ -120,8 +131,12 @@ if __name__ == '__main__':
 		    reviewRatings = []
 		    positiveReviews = []
 		    negativeReviews = []
+		    combinedSentimentScore = 0.0
+    		    logging.debug("%s @ %s, Google Place ID: %s" % (place.name, address, id))
 		    try:
 		    	for i, _ in enumerate(reviews):
+			   #Reset score, just to make sure it's not carrying forward old data.
+			   score=0.0
 			   reviewTextBuffer = reviews[i]['text']
 			   rate = reviews[i]['rating']
 			   reviewTextBuffer = reviewTextBuffer.encode('utf-8')
@@ -131,33 +146,40 @@ if __name__ == '__main__':
 			   #Get Google Sentiment Analysis for each review
 			   document = google_types.Document(content=reviewTextBuffer, type=enums.Document.Type.PLAIN_TEXT)
 			   annotations = client.analyze_sentiment(document=document)
-			   score = annotations.document_sentiment.score
-			   #magnitude = annotations.document_sentiment.magnitude
-			   logger.info("Google Sentiment Score = {}".format(score))
+		      	   #Get the overall score for the review submitted.
+			   score = annotations.document_sentiment.score 
+			   #Get the magnitude for the review submitted.
+			   #magnitude = annotations.document_sentiment.magnitude 
+			   logging.debug("Google Place Review = {}".format(reviewTextBuffer))
+			   logging.debug("Google Sentiment Score = {}".format(score))
 
+			   # Google's sentiment score ranges between -1.0 to 1.0
 			   # If score is above 0.3 it's a positive review, we can display this to customers
 			   # We are going to skip over the mixed reviews for now.
 			   # but can easily add an else condition, to capture them if required.
+			   combinedSentimentScore += score
 			   if score > 0.3:
-				positiveReviews.append(reviewTextBuffer)	
+				positiveReviews.append(reviewTextBuffer)
 			   elif score < -0.3:
-				negativeReviews.append(reviewTextBuffer)	
+				negativeReviews.append(reviewTextBuffer)
 			#End of For loop, for fetching reviews
-		    except:
-			#eprint("Exception inside fetching reviews & sentiment, ", id, place.url, score, sep="---") 
+		    except Exception, err:
+			print Exception, err
 			print("Exception inside fetching reviews & sentiment ID:{}, Maps URL: {}, Score {}".format(id, place.url, score) )
 			pass
 		    detail_res[id]['overallRatings'] = ratings
 		    detail_res[id]['reviewRatings'] = reviewRatings
-		    detail_res[id]['AllReviewText'] = reviewText
+		    detail_res[id]['score'] = combinedSentimentScore 
+		    #detail_res[id]['AllReviewText'] = reviewText
 		    detail_res[id]['positiveReviews'] = positiveReviews
 		    detail_res[id]['negativeReviews'] = negativeReviews
 		    print_results(place, detail_res, id)
+    		    logging.debug("\n\nAll Details fetched so far ===> %s\n\n\n" % (detail_res))
 		    count =  count + 1
 		    pass
 		#End of For loop for all query results on first page
-	except:
-		#eprint("Exception inside main for loop to fetch results from query", sep="---") 
+	except Exception, err:
+		print Exception, err
 		print("Exception inside main for loop to fetch results from query")
 		pass
 	print "Total Count : %s " % count
