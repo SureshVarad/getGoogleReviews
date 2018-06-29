@@ -46,3 +46,11 @@ sed -i 's/YOUR_API_KEY = ""/YOUR_API_KEY = "<your_actual_api_key_here>"/g' query
 ```
 python -m getGoogleReviews.query
 ```
+
+### Unit Tests
+# Due to time conmtraint, was just able to add 2 unit tests
+# more to come, when time permits, TO execute them follow below steps
+```
+cd getGoogleReviews
+python -m unittest query_test
+```
